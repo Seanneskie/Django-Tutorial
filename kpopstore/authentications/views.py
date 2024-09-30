@@ -1,10 +1,10 @@
 # views.py
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
-from .forms import RegisterForm, LoginForm
-from .models import Role, Account
+from .forms import RegisterForm, LoginForm, ProductForm
+from .models import Role, Account, Product
 
 def index(request):
     context = {}
@@ -37,7 +37,7 @@ def login_view(request):
                 login(request, user)
                 if user.role.role == 'Customer':
                     return redirect('customer_home')
-                elif user.role.role == 'upplier':
+                elif user.role.role == 'Supplier':
                     return redirect('supplier_home')
     else:
         form = LoginForm()
@@ -59,5 +59,41 @@ def customer_home_view(request):
 def supplier_home_view(request):
     if request.user.role.role != 'Supplier':
         return redirect('index')
-    context = {}
+    
+    products = Product.objects.all()
+
+    context = {
+        'products': products,
+    }
     return render(request, 'supplier/home.html', context)
+
+
+def product_create(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('supplier_home')
+    else:
+        form = ProductForm()
+    return render(request, 'supplier/create_product.html', {'form': form})
+
+
+def product_delete(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        product.delete()
+        return redirect('supplier_home')
+    return render(request, 'supplier/delete_product.html', {'product': product})
+
+
+def product_update(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            return redirect('supplier_home')
+    else:
+        form = ProductForm(instance=product)
+    return render(request, 'supplier/update_product.html', {'form': form})

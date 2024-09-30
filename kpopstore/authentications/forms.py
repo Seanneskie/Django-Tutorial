@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import Account, Role
+from .models import Account, Role, Product
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -17,3 +17,8 @@ class LoginForm(AuthenticationForm):
     class Meta:
         model = Account 
         fields = ['username', 'password']
+
+class ProductForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = ['product_name', 'description', 'price', 'image']
